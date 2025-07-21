@@ -1,0 +1,77 @@
+body {
+      font-family: 'Sarabun', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f8f8f8;
+      color: #333;
+    }
+    .header {
+      background-color: #4b2e83;
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 {
+      margin: 0;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 32px auto;
+      padding: 0 16px;
+    }
+    .store-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      overflow: hidden;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .store-image img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+    }
+    .store-content {
+      padding: 16px;
+    }
+    .store-name {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+      color: #4b2e83;
+    }
+    .store-types {
+      margin-bottom: 12px;
+    }
+    .type-tag {
+      display: inline-block;
+      background-color: #e8e8e8;
+      color: #555;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      margin-right: 6px;
+    }
+    .store-info {
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+    }
+    .store-description {
+      font-style: italic;
+      margin-bottom: 12px;
+    }
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .gallery img {
+      width: 100px;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }

@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เปิดร้าน - Eventfield</title>
+  <link rel="stylesheet" href="store-style.css">
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Eventfield</div>
+    <button class="back-btn" onclick="goBack()">กลับไปหน้าหลัก</button>
+  </div>
+
+  <div class="form-container">
+    <h2 class="form-title">เปิดร้านของคุณ</h2>
+    
+    <form id="storeForm">
+      <!-- ชื่อร้าน -->
+      <div class="form-group">
+        <label for="store-name">ชื่อร้าน</label>
+        <input type="text" id="store-name" placeholder="กรอกชื่อร้านของคุณ" required>
+      </div>
+
+      <!-- ประเภทของร้านที่รองรับ -->
+      <div class="form-group">
+        <label>ประเภทของร้านที่รองรับ</label>
+        <div class="checkbox-group">
+          <label class="checkbox-item">
+            <input type="radio" name="party-types" value="ค็อกเทล" onchange="togglePackageSection()">
+            ค็อกเทล
+          </label>
+          <label class="checkbox-item">
+            <input type="radio" name="party-types" value="บุฟเฟต์" onchange="togglePackageSection()">
+            บุฟเฟต์
+          </label>
+          <label class="checkbox-item">
+            <input type="radio" name="party-types" value="โต๊ะจีน" onchange="togglePackageSection()">
+            โต๊ะจีน
+          </label>
+        </div>
+      </div>
+
+      <!-- ราคาเรตราคา -->
+      <div class="form-group">
+        <label>ราคาเรตราคา</label>
+        <div class="price-inputs">
+          <input type="number" id="price-min" placeholder="ราคาต่ำสุด" min="0">
+          <span class="price-separator">-</span>
+          <input type="number" id="price-max" placeholder="ราคาสูงสุด" min="0">
+        </div>
+      </div>
+
+      <!-- รับแขกได้สูงสุด -->
+      <div class="form-group">
+        <label for="guest-capacity">รับแขกได้สูงสุด(คน)</label>
+        <input type="number" id="guest-capacity" placeholder="เช่น 500" min="1">
+      </div>
+
+      <!-- ที่อยู่จากแผนที่ -->
+      <div class="form-group">
+        <label for="store-address">ที่อยู่ของฉัน</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="text" id="store-address" placeholder="ระบุที่อยู่ หรือใช้แผนที่" style="flex: 1;">
+          <button type="button" onclick="openGoogleMap()" style="padding: 10px 15px; background: #4285f4; color: white; border: none; border-radius: 5px; cursor: pointer; white-space: nowrap;">📍 ปักหมุด</button>
+        </div>
+      </div>
+
+      <!-- เพิ่มไฟล์ PDF -->
+      <div class="form-group">
+        <label>เพิ่มไฟล์ PDF (เมนู, ใบอนุญาต, หรือเอกสารอื่นๆ)</label>
+        <div class="image-upload">
+          <input type="file" id="pdf-files" accept=".pdf" multiple onchange="previewPDFs(this, 'pdf-preview')" style="display: none;">
+          <div id="pdf-preview" onclick="handlePDFClick(event)">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">คลิกเพื่อเพิ่มไฟล์ PDF</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- รายการทั้งหมดในแพคเกจ - ซ่อนเมื่อเลือกบุฟเฟต์ -->
+      <div class="form-group" id="package-section">
+        <label>รายการทั้งหมดในแพคเกจราคานี้มีอะไรบ้าง</label>
+        <div id="items">
+          <div class="item-row">
+            <input type="text" placeholder="เช่น น้ำดื่ม" name="item-name">
+            <input type="number" placeholder="จำนวน" name="item-quantity">
+            <input type="number" placeholder="ราคา" name="item-price">
+          </div>
+          <div class="item-row">
+            <input type="text" placeholder="เช่น โต๊ะสูง" name="item-name">
+            <input type="number" placeholder="จำนวน" name="item-quantity">
+            <input type="number" placeholder="ราคา" name="item-price">
+          </div>
+        </div>
+        <button type="button" class="add-item-btn" onclick="addItem()">เพิ่มช่องรายการ</button>
+      </div>
+
+      <!-- รายละเอียดร้าน -->
+      <div class="form-group">
+        <label for="store-description">รายละเอียดร้าน</label>
+        <textarea id="store-description" placeholder="อธิบายเกี่ยวกับร้าน บรรยากาศ และจุดเด่น"></textarea>
+      </div>
+
+      <!-- รูปโปรไฟล์ร้าน -->
+      <div class="form-group">
+        <label>รูปโปรไฟล์ร้าน</label>
+        <div class="image-upload">
+          <input type="file" id="profile-image" accept="image/*" onchange="previewImage(this, 'profile-preview')" style="display: none;">
+          <div id="profile-preview" onclick="handleProfileClick(event)">
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">คลิกเพื่อเพิ่มรูป</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- รูปประกอบอื่นๆ ในร้าน -->
+      <div class="form-group">
+        <label>รูปประกอบอื่นๆ ในร้าน</label>
+        <div class="image-upload">
+          <input type="file" id="gallery-images" accept="image/*" multiple onchange="previewImages(this, 'gallery-preview')" style="display: none;">
+          <div id="gallery-preview" onclick="handleGalleryClick(event)">
+            <div class="upload-icon">🖼️</div>
+            <div class="upload-text">คลิกเพื่อเพิ่มรูป</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="resetForm()">ล้างข้อมูล</button>
+        <button type="submit" class="btn btn-primary">สร้างร้าน</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    let profileImageData = null;
+    let galleryImagesData = [];
+    let pdfFilesData = [];
+
+    // ฟังก์ชันสำหรับการแสดง/ซ่อนส่วนรายการแพคเกจ
+    function togglePackageSection() {
+      const selectedType = document.querySelector('input[name="party-types"]:checked')?.value;
+      const packageSection = document.getElementById('package-section');
+      
+      if (selectedType === 'บุฟเฟต์') {
+        packageSection.style.display = 'none';
+      } else {
+        packageSection.style.display = 'block';
+      }
+    }
+
+    // เรียกใช้ฟังก์ชันเมื่อโหลดหน้า
+    window.addEventListener('load', function() {
+      togglePackageSection();
+    });
+
+    // Open Google Map for location picking
+    function openGoogleMap() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            
+            const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+            const mapWindow = window.open(mapUrl, '_blank', 'width=800,height=600');
+            
+            alert('กรุณาปักหมุดในแผนที่ที่เปิดขึ้น แล้วคัดลอกที่อยู่กลับมาใส่ในช่องด้านล่าง');
+          },
+          function(error) {
+            const mapUrl = 'https://www.google.com/maps';
+            const mapWindow = window.open(mapUrl, '_blank', 'width=800,height=600');
+            
+            alert('กรุณาค้นหาและปักหมุดที่อยู่ในแผนที่ที่เปิดขึ้น แล้วคัดลอกที่อยู่กลับมาใส่ในช่องด้านล่าง');
+          }
+        );
+      } else {
+        const mapUrl = 'https://www.google.com/maps';
+        const mapWindow = window.open(mapUrl, '_blank', 'width=800,height=600');
+        
+        alert('กรุณาค้นหาและปักหมุดที่อยู่ในแผนที่ที่เปิดขึ้น แล้วคัดลอกที่อยู่กลับมาใส่ในช่องด้านล่าง');
+      }
+    }
+
+    // Handle clicks for different upload areas
+    function handleProfileClick(event) {
+      if (event.target.classList.contains('remove-btn') || 
+          event.target.parentElement.classList.contains('remove-btn')) {
+        return;
+      }
+      document.getElementById('profile-image').click();
+    }
+
+    function handleGalleryClick(event) {
+      if (event.target.classList.contains('remove-btn') || 
+          event.target.parentElement.classList.contains('remove-btn') ||
+          event.target.closest('.remove-btn')) {
+        return;
+      }
+      document.getElementById('gallery-images').click();
+    }
+
+    function handlePDFClick(event) {
+      if (event.target.classList.contains('remove-btn') || 
+          event.target.parentElement.classList.contains('remove-btn') ||
+          event.target.closest('.remove-btn')) {
+        return;
+      }
+      document.getElementById('pdf-files').click();
+    }
+
+    // Add new item row
+    function addItem() {
+      const itemContainer = document.getElementById("items");
+      const itemCount = itemContainer.children.length;
+
+      const row = document.createElement("div");
+      row.className = "item-row";
+
+      row.innerHTML = `
+        <input type="text" placeholder="ชื่อรายการ" name="item-name">
+        <input type="number" placeholder="จำนวน" name="item-quantity">
+        <input type="number" placeholder="ราคา" name="item-price">
+        ${itemCount > 1 ? '<button type="button" class="remove-item-btn" onclick="removeItem(this)">ลบ</button>' : ''}
+      `;
+
+      itemContainer.appendChild(row);
+    }
+
+    // Remove item row
+    function removeItem(button) {
+      const row = button.parentElement;
+      row.remove();
+    }
+
+    // Preview single image
+    function previewImage(input, previewId) {
+      const file = input.files[0];
+      const preview = document.getElementById(previewId);
+      
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          if (previewId === 'profile-preview') {
+            profileImageData = e.target.result;
+          }
+          
+          const container = document.createElement('div');
+          container.style.cssText = 'position: relative; display: inline-block;';
+          
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.style.cssText = 'max-width: 100%; max-height: 200px; border-radius: 8px;';
+          img.alt = 'Preview';
+          
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'remove-btn';
+          removeBtn.innerHTML = '×';
+          removeBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 14px; line-height: 1; z-index: 10;';
+          removeBtn.onclick = function(e) {
+            e.stopPropagation();
+            removeProfileImage();
+          };
+          
+          container.appendChild(img);
+          container.appendChild(removeBtn);
+          preview.innerHTML = '';
+          preview.appendChild(container);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Remove profile image
+    function removeProfileImage() {
+      profileImageData = null;
+      document.getElementById('profile-image').value = '';
+      document.getElementById('profile-preview').innerHTML = `
+        <div class="upload-icon">📷</div>
+        <div class="upload-text">คลิกเพื่อเพิ่มรูป</div>
+      `;
+    }
+
+    // Preview multiple images
+    function previewImages(input, previewId) {
+      const files = Array.from(input.files);
+      
+      if (files.length > 0) {
+        let processedFiles = 0;
+        
+        files.forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            galleryImagesData.push(e.target.result);
+            processedFiles++;
+            
+            if (processedFiles === files.length) {
+              renderGalleryPreview();
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      
+      input.value = '';
+    }
+
+    // Remove gallery image
+    function removeImage(index) {
+      if (index >= 0 && index < galleryImagesData.length) {
+        galleryImagesData.splice(index, 1);
+        renderGalleryPreview();
+      }
+    }
+
+    // Render gallery preview
+    function renderGalleryPreview() {
+      const preview = document.getElementById('gallery-preview');
+      
+      if (galleryImagesData.length === 0) {
+        preview.innerHTML = `
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-text">คลิกเพื่อเพิ่มรูป</div>
+        `;
+        return;
+      }
+      
+      preview.innerHTML = '';
+      
+      galleryImagesData.forEach((imgData, index) => {
+        const imgDiv = document.createElement('div');
+        imgDiv.style.cssText = 'display: inline-block; margin: 5px; position: relative;';
+        
+        const img = document.createElement('img');
+        img.src = imgData;
+        img.style.cssText = 'width: 80px; height: 80px; object-fit: cover; border-radius: 4px;';
+        img.alt = `Gallery ${index + 1}`;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '×';
+        removeBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 14px; line-height: 1; z-index: 10;';
+        
+        removeBtn.onclick = function(e) {
+          e.stopPropagation();
+          removeImage(index);
+        };
+        
+        imgDiv.appendChild(img);
+        imgDiv.appendChild(removeBtn);
+        preview.appendChild(imgDiv);
+      });
+      
+      const addMoreDiv = document.createElement('div');
+      addMoreDiv.style.cssText = 'display: inline-block; margin: 5px; width: 80px; height: 80px; border: 2px dashed #8b7355; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; background-color: #f9f9f9;';
+      addMoreDiv.innerHTML = `
+        <div style="text-align: center; color: #8b7355;">
+          <div style="font-size: 20px;">+</div>
+          <div style="font-size: 10px;">เพิ่มรูป</div>
+        </div>
+      `;
+      addMoreDiv.onclick = function() {
+        document.getElementById('gallery-images').click();
+      };
+      preview.appendChild(addMoreDiv);
+    }
+
+    // Preview PDF files
+    function previewPDFs(input, previewId) {
+      const files = Array.from(input.files);
+      
+      if (files.length > 0) {
+        let processedFiles = 0;
+        
+        files.forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            pdfFilesData.push({
+              name: file.name,
+              size: file.size,
+              data: e.target.result
+            });
+            processedFiles++;
+            
+            if (processedFiles === files.length) {
+              renderPDFPreview();
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+      
+      input.value = '';
+    }
+
+    // Remove PDF file
+    function removePDF(index) {
+      if (index >= 0 && index < pdfFilesData.length) {
+        pdfFilesData.splice(index, 1);
+        renderPDFPreview();
+      }
+    }
+
+    // Render PDF preview
+    function renderPDFPreview() {
+      const preview = document.getElementById('pdf-preview');
+      
+      if (pdfFilesData.length === 0) {
+        preview.innerHTML = `
+          <div class="upload-icon">📄</div>
+          <div class="upload-text">คลิกเพื่อเพิ่มไฟล์ PDF</div>
+        `;
+        return;
+      }
+      
+      preview.innerHTML = '';
+      
+      pdfFilesData.forEach((pdfData, index) => {
+        const pdfDiv = document.createElement('div');
+        pdfDiv.style.cssText = 'display: inline-block; margin: 5px; position: relative; padding: 10px; border: 2px solid #ddd; border-radius: 8px; background: #f9f9f9; max-width: 150px;';
+        
+        const content = document.createElement('div');
+        content.style.cssText = 'text-align: center;';
+        content.innerHTML = `
+          <div style="font-size: 30px; color: #d32f2f;">📄</div>
+          <div style="font-size: 12px; font-weight: bold; margin: 5px 0; word-break: break-word;">${pdfData.name}</div>
+          <div style="font-size: 10px; color: #666;">${(pdfData.size / 1024 / 1024).toFixed(2)} MB</div>
+        `;
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '×';
+        removeBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 14px; line-height: 1; z-index: 10;';
+        
+        removeBtn.onclick = function(e) {
+          e.stopPropagation();
+          removePDF(index);
+        };
+        
+        pdfDiv.appendChild(content);
+        pdfDiv.appendChild(removeBtn);
+        preview.appendChild(pdfDiv);
+      });
+      
+      const addMoreDiv = document.createElement('div');
+      addMoreDiv.style.cssText = 'display: inline-block; margin: 5px; width: 100px; height: 100px; border: 2px dashed #8b7355; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; background-color: #f9f9f9;';
+      addMoreDiv.innerHTML = `
+        <div style="text-align: center; color: #8b7355;">
+          <div style="font-size: 20px;">+</div>
+          <div style="font-size: 10px;">เพิ่ม PDF</div>
+        </div>
+      `;
+      addMoreDiv.onclick = function() {
+        document.getElementById('pdf-files').click();
+      };
+      preview.appendChild(addMoreDiv);
+    }
+
+    // Get package items
+    function getPackageItems() {
+      const packageSection = document.getElementById('package-section');
+      
+      // ถ้าส่วนรายการแพคเกจถูกซ่อนอยู่ (บุฟเฟต์) ให้คืนค่าเป็น array ว่าง
+      if (packageSection.style.display === 'none') {
+        return [];
+      }
+      
+      const itemRows = document.querySelectorAll('#items .item-row');
+      const items = [];
+      
+      itemRows.forEach(row => {
+        const nameInput = row.querySelector('input[name="item-name"]');
+        const quantityInput = row.querySelector('input[name="item-quantity"]');
+        const priceInput = row.querySelector('input[name="item-price"]');
+        
+        if (nameInput && nameInput.value.trim()) {
+          items.push({
+            name: nameInput.value.trim(),
+            quantity: quantityInput ? parseInt(quantityInput.value) || 0 : 0,
+            price: priceInput ? parseInt(priceInput.value) || 0 : 0
+          });
+        }
+      });
+      
+      return items;
+    }
+
+    // Form submission
+    document.getElementById('storeForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  const storeName = document.getElementById('store-name').value;
+  const storeAddress = document.getElementById('store-address').value;
+  const selectedPartyType = document.querySelector('input[name="party-types"]:checked');
+  const priceMin = document.getElementById('price-min').value;
+  const priceMax = document.getElementById('price-max').value;
+  const guestCapacity = document.getElementById('guest-capacity').value;
+  const storeDescription = document.getElementById('store-description').value;
+  const packageItems = getPackageItems();
+
+  if (!storeName) {
+    alert('กรุณากรอกชื่อร้าน');
+    return;
+  }
+
+  if (!selectedPartyType) {
+    alert('กรุณาเลือกประเภทร้าน');
+    return;
+  }
+
+  const storeData = {
+    id: Date.now(),
+    name: storeName,
+    address: storeAddress,
+    partyType: selectedPartyType.value,
+    priceRange: {
+      min: priceMin ? parseInt(priceMin) : 0,
+      max: priceMax ? parseInt(priceMax) : 0
+    },
+    guestCapacity: guestCapacity ? parseInt(guestCapacity) : 0,
+    description: storeDescription,
+    packageItems: packageItems,
+    profileImage: profileImageData,
+    galleryImages: [...galleryImagesData],
+    pdfFiles: [...pdfFilesData],
+    createdAt: new Date().toISOString()
+  };
+
+  // บันทึกข้อมูลลง localStorage
+  try {
+    const existingStores = JSON.parse(localStorage.getItem('stores') || '[]');
+    existingStores.push(storeData);
+    localStorage.setItem('stores', JSON.stringify(existingStores));
+    
+    alert('สร้างร้านเรียบร้อยแล้ว!');
+    console.log('Store created:', storeData);
+    
+    // Redirect กลับไปหน้า index พร้อมกับ parameter
+    window.location.href = 'index.html?created=true';
+  } catch (error) {
+    console.error('Error saving store:', error);
+    alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+  }
+});
+
+    // Reset form
+    function resetForm() {
+      if (confirm('คุณต้องการล้างข้อมูลทั้งหมดหรือไม่?')) {
+        document.getElementById('storeForm').reset();
+        profileImageData = null;
+        galleryImagesData = [];
+        pdfFilesData = [];
+        
+        const itemsContainer = document.getElementById('items');
+        itemsContainer.innerHTML = `
+          <div class="item-row">
+            <input type="text" placeholder="เช่น น้ำดื่ม" name="item-name">
+            <input type="number" placeholder="จำนวน" name="item-quantity">
+            <input type="number" placeholder="ราคา" name="item-price">
+          </div>
+          <div class="item-row">
+            <input type="text" placeholder="เช่น โต๊ะสูง" name="item-name">
+            <input type="number" placeholder="จำนวน" name="item-quantity">
+            <input type="number" placeholder="ราคา" name="item-price">
+          </div>
+        `;
+        
+        document.getElementById('profile-preview').innerHTML = `
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">คลิกเพื่อเพิ่มรูป</div>
+        `;
+        
+        document.getElementById('pdf-preview').innerHTML = `
+          <div class="upload-icon">📄</div>
+          <div class="upload-text">คลิกเพื่อเพิ่มไฟล์ PDF</div>
+        `;
+        
+        renderGalleryPreview();
+        
+        // รีเซ็ตการแสดง/ซ่อนส่วนรายการแพคเกจ
+        togglePackageSection();
+      }
+    }
+
+    // Go back to main page
+    function goBack() {
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

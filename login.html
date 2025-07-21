@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เข้าสู่ระบบ - Eventfield</title>
+  <link rel="stylesheet" href="login-style.css">
+</head>
+<body>
+  <div class="floating-shape"></div>
+  <div class="floating-shape"></div>
+  <div class="floating-shape"></div>
+  
+  <!-- Login Form -->
+  <div class="login-container" id="loginForm">
+    <div class="back-btn">
+      <a href="index.html">&larr; กลับหน้าหลัก</a>
+    </div>
+    
+    <h2>เข้าสู่ระบบ</h2>
+    <form action="#" method="POST">
+      <div class="input-group username">
+        <input type="text" name="username" placeholder="ชื่อผู้ใช้" required>
+      </div>
+      <div class="input-group password">
+        <input type="password" name="password" placeholder="รหัสผ่าน" required>
+      </div>
+      <button type="submit" class="login-btn">เข้าสู่ระบบ</button>
+    </form>
+    <div class="forgot-password">
+      <a href="#" onclick="showResetForm()">ลืมรหัสผ่าน?</a>
+    </div>
+    <div class="footer">
+      ยังไม่มีบัญชี? <a href="register.html">สมัครสมาชิก</a>
+    </div>
+  </div>
+
+  <!-- Reset Password Form -->
+  <div class="login-container reset-container" id="resetForm" style="display: none;">
+    <div class="back-btn">
+      <a href="#" onclick="showLoginForm()">&larr; กลับไปเข้าสู่ระบบ</a>
+    </div>
+    
+    <h2>รีเซ็ตรหัสผ่าน</h2>
+    <p class="reset-description">กรุณาใส่อีเมลของคุณเพื่อรับลิงก์รีเซ็ตรหัสผ่าน</p>
+    <form action="#" method="POST" id="resetPasswordForm">
+      <div class="input-group email">
+        <input type="email" name="email" placeholder="อีเมล" required>
+      </div>
+      <button type="submit" class="login-btn">ส่งลิงก์รีเซ็ต</button>
+    </form>
+    <div class="footer">
+      จำรหัสผ่านได้แล้ว? <a href="#" onclick="showLoginForm()">เข้าสู่ระบบ</a>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div class="login-container success-container" id="successMessage" style="display: none;">
+    <div class="success-icon">✓</div>
+    <h2>ส่งสำเร็จ!</h2>
+    <p class="success-description">เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลของคุณแล้ว<br>กรุณาตรวจสอบอีเมลและทำตามขั้นตอนเพื่อรีเซ็ตรหัสผ่าน</p>
+    <button class="login-btn" onclick="showLoginForm()">กลับไปเข้าสู่ระบบ</button>
+  </div>
+
+  <script>
+    // Login form functionality
+    document.querySelector('#loginForm form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const username = document.querySelector('input[name="username"]').value;
+      const password = document.querySelector('input[name="password"]').value;
+      
+      if (username && password) {
+        alert('เข้าสู่ระบบสำเร็จ!');
+        // Redirect to main page after login
+        window.location.href = 'index.html';
+      } else {
+        alert('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน');
+      }
+    });
+
+    // Reset password form functionality
+    document.querySelector('#resetPasswordForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const email = document.querySelector('input[name="email"]').value;
+      
+      if (email) {
+        showSuccessMessage();
+      } else {
+        alert('กรุณากรอกอีเมล');
+      }
+    });
+
+    // Form switching functions
+    function showResetForm() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('resetForm').style.display = 'block';
+      document.getElementById('successMessage').style.display = 'none';
+    }
+
+    function showLoginForm() {
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('resetForm').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'none';
+      
+      // Clear form fields
+      document.querySelector('input[name="email"]').value = '';
+    }
+
+    function showSuccessMessage() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('resetForm').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ค้นหาสถานที่ - Eventfield</title>
+  <link rel="stylesheet" href="index.css">
+  </head>
+  <body>
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="logo">
+        <h1>Eventfield</h1>
+      </div>
+      <nav class="nav">
+        <button id="openStoreBtn">เปิดร้าน</button>
+        <a href="profile.html" class="profile-btn" id="profileBtn" style="display: none;">โปรไฟล์</a>
+        <a href="login.html" class="login-btn" id="loginBtn">เข้าสู่ระบบ</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <div class="search-section">
+        <h2 class="search-title">ค้นหาสถานที่</h2>
+        
+        <div class="search-form">
+          <div class="search-row">
+            <div class="input-group">
+              <label for="guest-count">ใส่จำนวนแขก (คน)</label>
+              <input type="number" id="guest-count" placeholder="เช่น 200" value="200">
+            </div>
+
+            <div class="input-group">
+              <label for="party-type-select">จัดเลี้ยงแบบ</label>
+              <div class="select-wrapper">
+                <select id="party-type-select">
+                  <option value="ค็อกเทล" selected>ค็อกเทล</option>
+                  <option value="บุฟเฟต์">บุฟเฟต์</option>
+                  <option value="โต๊ะจีน">โต๊ะจีน</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="budget">งบประมาณ (บาท)</label>
+              <input type="number" id="budget" placeholder="เช่น 400000" value="400000">
+            </div>
+          </div>
+          
+          <button type="submit" class="search-btn">ค้นหาสถานที่</button>
+        </div>
+      </div>
+
+      <!-- Stores Display Section -->
+      <section class="stores-section">
+        <h3 class="stores-title">ร้านของคุณ</h3>
+        <div id="storesContainer">
+          <div class="no-stores">
+            <span>🏪</span>
+            <p>ยังไม่มีร้านของคุณ</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Gallery Modal -->
+  <div id="galleryModal" class="gallery-modal">
+    <div class="gallery-content">
+      <button class="gallery-close" onclick="closeGallery()">×</button>
+      <button class="gallery-nav gallery-prev" onclick="prevImage()">‹</button>
+      <img id="galleryImage" src="" alt="Gallery Image">
+      <button class="gallery-nav gallery-next" onclick="nextImage()">›</button>
+    </div>
+  </div>
+
+  <script>
+    let currentGalleryImages = [];
+    let currentImageIndex = 0;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const selectWrapper = document.querySelector('.select-wrapper');
+      const select = document.getElementById('party-type-select');
+      const searchBtn = document.querySelector('.search-btn');
+      const openStoreBtn = document.getElementById('openStoreBtn');
+      const profileBtn = document.getElementById('profileBtn');
+      const loginBtn = document.getElementById('loginBtn');
+
+      // ตรวจสอบสถานะการเข้าสู่ระบบ
+      checkLoginStatus();
+
+      function checkLoginStatus() {
+        const isLoggedIn = localStorage.getItem('isLoggedIn');
+        const userData = localStorage.getItem('userData');
+        
+        if (isLoggedIn === 'true' && userData) {
+          // แสดงปุ่มโปรไฟล์ ซ่อนปุ่มเข้าสู่ระบบ
+          if (profileBtn) profileBtn.style.display = 'inline-block';
+          if (loginBtn) loginBtn.style.display = 'none';
+          
+          // แสดงปุ่มเปิดร้านเมื่อล็อกอินแล้ว
+          if (openStoreBtn) openStoreBtn.style.display = 'inline-block';
+        } else {
+          // แสดงปุ่มเข้าสู่ระบบ ซ่อนปุ่มโปรไฟล์และปุ่มเปิดร้าน
+          if (profileBtn) profileBtn.style.display = 'none';
+          if (loginBtn) loginBtn.style.display = 'inline-block';
+          if (openStoreBtn) openStoreBtn.style.display = 'none';
+        }
+      }
+
+      // Dropdown click
+      if (selectWrapper && select) {
+        selectWrapper.addEventListener('click', function(e) {
+          if (e.target.tagName !== 'OPTION') {
+            select.focus();
+          }
+        });
+      }
+
+      // Search functionality
+      if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+          const guestCount = document.getElementById('guest-count')?.value || '';
+          const partyType = document.getElementById('party-type-select')?.value || '';
+          const budget = document.getElementById('budget')?.value || '';
+          alert(`กำลังค้นหาสถานที่สำหรับ ${guestCount} คน จัดเลี้ยงแบบ${partyType} งบประมาณ ${budget} บาท`);
+        });
+      }
+
+      // Open Store button click
+      if (openStoreBtn) {
+        openStoreBtn.addEventListener('click', () => {
+          window.location.href = 'open-store.html';
+        });
+      }
+
+      // Load and display stores
+      loadStores();
+
+      // Check for returning from store creation
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('created') === 'true') {
+        setTimeout(() => {
+          alert('สร้างร้านเรียบร้อยแล้ว!');
+          // Remove parameter from URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }, 100);
+      }
+    });
+
+    // Load stores from localStorage
+    function loadStores() {
+      try {
+        const stores = JSON.parse(localStorage.getItem('stores') || '[]');
+        displayStores(stores);
+      } catch (error) {
+        console.error('Error loading stores:', error);
+        displayStores([]);
+      }
+    }
+
+    // Display stores
+    function displayStores(stores) {
+      const container = document.getElementById('storesContainer');
+      
+      if (stores.length === 0) {
+        container.innerHTML = `
+          <div class="no-stores">
+            <span>🏪</span>
+            <p>ยังไม่มีร้านของคุณ</p>
+          </div>
+        `;
+        return;
+      }
+
+      const storesGrid = document.createElement('div');
+      storesGrid.className = 'stores-grid';
+
+      stores.forEach(store => {
+        const storeCard = createStoreCard(store);
+        storesGrid.appendChild(storeCard);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(storesGrid);
+    }
+
+    // Create store card
+    function createStoreCard(store) {
+  const card = document.createElement('div');
+  card.className = 'store-card';
+
+  const hasGallery = Array.isArray(store.galleryImages) && store.galleryImages.length > 0;
+  const displayImage = store.profileImage || (hasGallery ? store.galleryImages[0] : null);
+
+  const partyTypesHTML = Array.isArray(store.partyTypes)
+    ? store.partyTypes.map(type => `<span class="type-tag">${type}</span>`).join('')
+    : '';
+
+  const priceMin = store.priceRange?.min ?? 0;
+  const priceMax = store.priceRange?.max ?? 0;
+  const guestCapacity = store.guestCapacity ?? 0;
+
+  const commentsHTML = getComments(store.id)
+    .map(comment => `<div class="comment-item">🗨️ ${comment}</div>`)
+    .join('');
+
+  card.innerHTML = `
+    <div class="store-image" ${hasGallery ? `onclick="openGallery([${store.galleryImages.map(img => `'${img}'`).join(',')}], 0)"` : ''} style="${hasGallery ? 'cursor: pointer;' : ''}">
+      ${displayImage ? 
+        `<img src="${displayImage}" alt="${store.name}">` : 
+        '<div class="placeholder">🏪</div>'
+      }
+    </div>
+    <div class="store-content">
+      <h4 class="store-name">${store.name ?? 'ไม่มีชื่อร้าน'}</h4>
+      <div class="store-types">
+        ${partyTypesHTML}
+      </div>
+      <div class="store-info">
+        <div>💰 ${priceMin.toLocaleString()} - ${priceMax.toLocaleString()} บาท/คน</div>
+        <div>👥 รับได้ ${guestCapacity.toLocaleString()} คน</div>
+      </div>
+      ${store.description ? `<div class="store-description">${store.description}</div>` : ''}
+      <div class="store-actions">
+        <button class="btn-edit" onclick="editStore(${store.id})">แก้ไข</button>
+        <button class="btn-delete" onclick="deleteStore(${store.id})">ลบ</button>
+      </div>
+      ${getUserRole() === 'user' ? `
+      <div class="comment-section">
+        <textarea class="comment-input" placeholder="แสดงความคิดเห็น..." data-store-id="${store.id}"></textarea>
+        <button class="comment-submit" onclick="submitComment(${store.id})">ส่งความคิดเห็น</button>
+        <div class="comment-list" id="comment-list-${store.id}">
+          ${commentsHTML}
+        </div>
+      </div>
+      ` : ''}
+    </div>
+  `;
+
+  return card;
+}
+
+    // Edit store
+    function editStore(storeId) {
+      window.location.href = `open-store.html?edit=${storeId}`;
+    }
+
+    // Delete store
+    function deleteStore(storeId) {
+      if (confirm('คุณต้องการลบร้านนี้หรือไม่?')) {
+        try {
+          const stores = JSON.parse(localStorage.getItem('stores') || '[]');
+          const updatedStores = stores.filter(store => store.id !== storeId);
+          localStorage.setItem('stores', JSON.stringify(updatedStores));
+          loadStores();
+          alert('ลบร้านเรียบร้อยแล้ว');
+        } catch (error) {
+          alert('เกิดข้อผิดพลาดในการลบร้าน');
+        }
+      }
+    }
+
+    // Gallery functions
+    function openGallery(images, startIndex = 0) {
+      currentGalleryImages = images;
+      currentImageIndex = startIndex;
+      const modal = document.getElementById('galleryModal');
+      const img = document.getElementById('galleryImage');
+      
+      img.src = images[startIndex];
+      modal.classList.add('active');
+      
+      // Hide navigation if only one image
+      const prevBtn = document.querySelector('.gallery-prev');
+      const nextBtn = document.querySelector('.gallery-next');
+      if (images.length <= 1) {
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+      } else {
+        prevBtn.style.display = 'block';
+        nextBtn.style.display = 'block';
+      }
+    }
+
+    function closeGallery() {
+      document.getElementById('galleryModal').classList.remove('active');
+    }
+
+    function prevImage() {
+      currentImageIndex = (currentImageIndex - 1 + currentGalleryImages.length) % currentGalleryImages.length;
+      document.getElementById('galleryImage').src = currentGalleryImages[currentImageIndex];
+    }
+
+    function nextImage() {
+      currentImageIndex = (currentImageIndex + 1) % currentGalleryImages.length;
+      document.getElementById('galleryImage').src = currentGalleryImages[currentImageIndex];
+    }
+
+    // Close gallery on click outside
+    document.getElementById('galleryModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeGallery();
+      }
+    });
+
+    // Close gallery on escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeGallery();
+      }
+    });
+
+    function getUserRole() {
+      try {
+        return localStorage.getItem('userRole') || sessionStorage.getItem('userRole') || 'user';
+      } catch {
+        return 'user';
+      }
+    }
+
+    function getComments(storeId) {
+      const commentsData = JSON.parse(localStorage.getItem('storeComments') || '{}');
+      return commentsData[storeId] || [];
+    }
+
+    function submitComment(storeId) {
+      const textarea = document.querySelector(`.comment-input[data-store-id="${storeId}"]`);
+      const commentText = textarea?.value.trim();
+      if (!commentText) return;
+
+      const commentsData = JSON.parse(localStorage.getItem('storeComments') || '{}');
+      if (!commentsData[storeId]) commentsData[storeId] = [];
+
+      commentsData[storeId].push(commentText);
+      localStorage.setItem('storeComments', JSON.stringify(commentsData));
+
+      textarea.value = '';
+      updateCommentList(storeId);
+    }
+
+    function updateCommentList(storeId) {
+      const list = document.getElementById(`comment-list-${storeId}`);
+      const comments = getComments(storeId);
+      list.innerHTML = comments.map(comment => `<div class="comment-item">🗨️ ${comment}</div>`).join('');
+    }
+  </script>
+</body>
+</html>
